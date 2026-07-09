@@ -1,1 +1,28 @@
-prompts/*
+/prompts
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+dist/
+lib/
+lib64/
+parts/
+sdist/
+var/
+.installed.cfg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

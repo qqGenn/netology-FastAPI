@@ -1,0 +1,276 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Task Manager API",
+    "description": "Система управления задачами - Task Manager API",
+    "version": "1.0.0",
+    "contact": {
+      "email": "qgen-web@yandex.ru"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Development server"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Root endpoint",
+        "description": "Basic health check endpoint",
+        "tags": ["general"],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Hello World"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks": {
+      "post": {
+        "summary": "Создание новой задачи",
+        "description": "Создает новую задачу с указанными параметрами",
+        "tags": ["tasks"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Задача успешно создана",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации входных данных",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "loc": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Путь к полю с ошибкой"
+                          },
+                          "msg": {
+                            "type": "string",
+                            "description": "Описание ошибки"
+                          },
+                          "type": {
+                            "type": "string",
+                            "description": "Тип ошибки валидации"
+                          }
+                        }
+                      },
+                      "example": [
+                        {
+                          "loc": ["body", "title"],
+                          "msg": "Название задачи обязательно для заполнения и должно содержать от 3 до 100 символов",
+                          "type": "value_error"
+                        },
+                        {
+                          "loc": ["body", "priority"],
+                          "msg": "Приоритет обязателен и должен быть целым числом от 1 до 5",
+                          "type": "value_error"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{task_id}": {
+      "get": {
+        "summary": "Получение данных задачи по task_id",
+        "description": "Возвращает задачу по указанному идентификатору",
+        "tags": ["tasks"],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Идентификатор задачи"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Задача найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Задача с указанным ID не найдена в системе",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "string",
+                      "example": "Task not found"
+                    },
+                    "task_id": {
+                      "type": "integer",
+                      "example": 123
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации path-параметра",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "detail": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "loc": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Путь к полю с ошибкой"
+                          },
+                          "msg": {
+                            "type": "string",
+                            "description": "Описание ошибки"
+                          },
+                          "type": {
+                            "type": "string",
+                            "description": "Тип ошибки валидации"
+                          }
+                        }
+                      },
+                      "example": [
+                        {
+                          "loc": ["path", "task_id"],
+                          "msg": "task_id должен быть целым числом",
+                          "type": "type_error.integer"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "TaskCreate": {
+        "type": "object",
+        "required": ["title", "priority"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 100,
+            "description": "Название задачи. Обязательное поле, должно содержать от 3 до 100 символов",
+            "example": "Сходить в кино"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Подробное описание, что требуется сделать в рамках задачи (опционально)",
+            "example": "Выбрать интересный фильм, купить билеты в последний ряд, взять прохладительные напитки и наслаждаться"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "description": "Уровень приоритета задачи от 1 до 5. 1 - низкий приоритет, 5 - высокий приоритет",
+            "example": 3
+          }
+        }
+      },
+      "TaskResponse": {
+        "type": "object",
+        "required": ["id", "title", "priority", "created_at"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Уникальный идентификатор задачи в системе",
+            "example": 1
+          },
+          "title": {
+            "type": "string",
+            "description": "Название задачи",
+            "example": "Сходить в кино"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Подробное описание, что требуется сделать в рамках задачи (опционально)",
+            "example": "Выбрать интересный фильм, купить билеты в последний ряд, взять прохладительные напитки и наслаждаться"
+          },
+          "priority": {
+            "type": "integer",
+            "description": "Уровень приоритета задачи от 1 до 5. 1 - низкий приоритет, 5 - высокий приоритет",
+            "example": 3
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Дата и время создания задачи в формате ISO 8601",
+            "example": "2026-07-09T12:00:00.000000Z"
+          }
+        }
+      }
+    }
+  }
+}

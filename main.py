@@ -1,16 +1,29 @@
 from fastapi import FastAPI, HTTPException
 from datetime import datetime
 from models import TaskCreate, TaskResponse
+import json
 
 app = FastAPI(
-    title="FastAPI Base Project",
-    description="Нетология - FastAPI",
-    version="1.0.0"
+    title="Task Manager API",
+    description="Система управления задачами - Task Manager API",
+    version="1.0.0",
+    contact={
+        "email": "qgen-web@yandex.ru"
+    }
 )
+
+with open("docs/openapi.json", "r", encoding="utf-8") as f:
+    openapi_schema = json.load(f)
+
+app.openapi_schema = openapi_schema
+
+def custom_openapi():
+    return app.openapi_schema
+
+app.openapi = custom_openapi
 
 # Временное хранилище задач
 tasks: list[TaskResponse] = []
-
 
 @app.get("/")
 async def root():

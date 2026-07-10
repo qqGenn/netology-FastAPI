@@ -11,8 +11,6 @@ Netology/FastAPI/
 ├── main.py           # Основной файл приложения с FastAPI-эндпоинтами
 ├── models.py         # Pydantic-модели для валидации данных
 ├── requirements.txt  # Зависимости проекта
-├── docs/             # OpenAPI спецификация
-│   └── openapi.json
 ```
 
 ## Описание файлов
@@ -77,7 +75,6 @@ uvicorn main:app --reload
 
 ## OpenAPI документация
 
-- OpenAPI спецификация: `docs/openapi.json`
 - Swagger UI: http://localhost:8000/docs
 - Спецификация API: http://localhost:8000/docs/openapi.json
 

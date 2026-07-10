@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from datetime import datetime
 from models import TaskCreate, TaskResponse
+from fastapi.responses import JSONResponse
 import json
 
 app = FastAPI(
@@ -12,25 +13,78 @@ app = FastAPI(
     }
 )
 
-with open("docs/openapi.json", "r", encoding="utf-8") as f:
-    openapi_schema = json.load(f)
-
-app.openapi_schema = openapi_schema
-
-def custom_openapi():
-    return app.openapi_schema
-
-app.openapi = custom_openapi
-
 # Временное хранилище задач
 tasks: list[TaskResponse] = []
 
-@app.get("/")
+
+@app.get(
+    "/",
+    summary="Root endpoint",
+    description="Basic health check endpoint",
+    tags=["general"],
+    response_description="Successful response"
+)
 async def root():
     return {"message": "Hello, Netology!"}
 
 
-@app.post("/tasks", status_code=201, response_model=TaskResponse)
+@app.post(
+    "/tasks",
+    status_code=201,
+    summary="Создание новой задачи",
+    description="Создает новую задачу с указанными параметрами",
+    tags=["tasks"],
+    response_model=TaskResponse,
+    responses={
+        422: {
+            "description": "Ошибка валидации входных данных",
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "detail": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "loc": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "description": "Путь к полю с ошибкой"
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "description": "Описание ошибки"
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "description": "Тип ошибки валидации"
+                                        }
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "loc": ["body", "title"],
+                                        "msg": "Название задачи обязательно для заполнения и должно содержать от 3 до 100 символов",
+                                        "type": "value_error"
+                                    },
+                                    {
+                                        "loc": ["body", "priority"],
+                                        "msg": "Приоритет обязателен и должен быть целым числом от 1 до 5",
+                                        "type": "value_error"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+)
 async def create_task(task: TaskCreate):
     """Создать новую задачу."""
     # Генерируем ID на основе текущего количества задач
@@ -51,7 +105,77 @@ async def create_task(task: TaskCreate):
     return task_response
 
 
-@app.get("/tasks/{task_id}", response_model=TaskResponse)
+@app.get(
+    "/tasks/{task_id}",
+    summary="Получение данных задачи по task_id",
+    description="Возвращает задачу по указанному идентификатору",
+    tags=["tasks"],
+    response_model=TaskResponse,
+    responses={
+        404: {
+            "description": "Задача с указанным ID не найдена в системе",
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "detail": {
+                                "type": "string",
+                                "example": "Task not found"
+                            },
+                            "task_id": {
+                                "type": "integer",
+                                "example": 123
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        422: {
+            "description": "Ошибка валидации path-параметра",
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "detail": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "loc": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "description": "Путь к полю с ошибкой"
+                                        },
+                                        "msg": {
+                                            "type": "string",
+                                            "description": "Описание ошибки"
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "description": "Тип ошибки валидации"
+                                        }
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "loc": ["path", "task_id"],
+                                        "msg": "task_id должен быть целым числом",
+                                        "type": "type_error.integer"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+)
 async def get_task(task_id: int):
     """Получить задачу по ID."""
     for task in tasks:
